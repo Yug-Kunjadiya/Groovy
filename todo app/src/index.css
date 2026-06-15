@@ -1,0 +1,63 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(14, 165, 233, 0.14), transparent 0 26%),
+      radial-gradient(circle at 80% 10%, rgba(16, 185, 129, 0.12), transparent 0 22%),
+      radial-gradient(circle at top left, rgba(45, 212, 191, 0.28), transparent 32%),
+      radial-gradient(circle at top right, rgba(59, 130, 246, 0.24), transparent 30%),
+      linear-gradient(180deg, #020617 0%, #0f172a 45%, #020617 100%);
+    color: #e2e8f0;
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  body {
+    margin: 0;
+    min-width: 320px;
+    background: transparent;
+    @apply antialiased;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  ::selection {
+    background: rgba(45, 212, 191, 0.35);
+    color: #fff;
+  }
+}
+
+@layer components {
+  .app-shell {
+    @apply relative overflow-hidden px-4 py-8 sm:px-6 lg:px-8;
+  }
+
+  .glass-panel {
+    @apply relative mx-auto w-full max-w-4xl overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/70 shadow-glow backdrop-blur-xl;
+  }
+
+  .surface {
+    @apply border border-white/10 bg-white/5 shadow-[0_20px_80px_rgba(15,23,42,0.28)];
+  }
+
+  .soft-ring {
+    @apply ring-1 ring-inset ring-white/10;
+  }
+
+  .frost-card {
+    @apply border border-white/10 bg-slate-950/50 backdrop-blur-md;
+  }
+}
