@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import type { Student, StudentInput } from '../types/student';
-import api, { studentApi } from '../services/api';
+import { studentApi } from '../services/api';
 import { StudentTable } from './StudentTable';
 import { StudentForm } from './StudentForm';
 import { DeleteModal } from './DeleteModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, Search, Users, BookOpen, GraduationCap, X, AlertCircle, CheckCircle, 
-  Calendar, LayoutDashboard, Settings, BarChart3, Activity, ArrowUpRight,
-  Network, Cpu, Clock, TrendingUp, Award
+  Calendar, LayoutDashboard, BarChart3, Activity, ArrowUpRight,
+  TrendingUp, Award
 } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
@@ -17,14 +17,7 @@ export const Dashboard: React.FC = () => {
   const [courseFilter, setCourseFilter] = useState('All');
   const [sortBy, setSortBy] = useState('newest'); // 'name', 'newest', 'oldest'
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'analytics' | 'settings'>('dashboard');
-
-  // Latency & Settings checking states
-  const [pingLatency, setPingLatency] = useState<number | null>(null);
-  const [pinging, setPinging] = useState(false);
-  const [dbUserVal, setDbUserVal] = useState('postgres');
-  const [dbHostVal, setDbHostVal] = useState('localhost');
-  const [dbPortVal, setDbPortVal] = useState('5432');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'analytics'>('dashboard');
   
   // Notification state
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -103,23 +96,7 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  // Run dynamic api health and ping check
-  const runPingCheck = async () => {
-    setPinging(true);
-    const start = performance.now();
-    try {
-      await api.get('/health');
-      const end = performance.now();
-      setPingLatency(Math.round(end - start));
-      showNotification('success', 'API round-trip latency calculated successfully.');
-    } catch (err) {
-      console.error(err);
-      setPingLatency(null);
-      showNotification('error', 'Database server ping failed. Check network log.');
-    } finally {
-      setPinging(false);
-    }
-  };
+
 
   // Extract unique courses for filtering pills
   const coursesList = ['All', ...Array.from(new Set(students.map(s => s.course)))];
@@ -184,15 +161,6 @@ export const Dashboard: React.FC = () => {
             <BarChart3 size={16} className={activeTab === 'analytics' ? 'text-primary-400' : ''} />
             Analytics
           </button>
-          <button 
-            onClick={() => setActiveTab('settings')}
-            className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all ${
-              activeTab === 'settings' ? 'bg-slate-900 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
-            }`}
-          >
-            <Settings size={16} className={activeTab === 'settings' ? 'text-primary-400' : ''} />
-            Settings
-          </button>
         </nav>
 
         <div className="mt-auto bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-900 p-4 rounded-2xl flex flex-col gap-3">
@@ -201,7 +169,7 @@ export const Dashboard: React.FC = () => {
             <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
             <span className="text-xs font-bold text-slate-300">PostgreSQL Online</span>
           </div>
-          <div className="text-[10px] font-medium text-slate-500">Host: {dbHostVal}:{dbPortVal}</div>
+          <div className="text-[10px] font-medium text-slate-500">Host: localhost:5432</div>
         </div>
       </aside>
 
@@ -236,9 +204,7 @@ export const Dashboard: React.FC = () => {
         <header className="border-b border-slate-900 px-6 sm:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             <h1 className="text-xl font-extrabold text-white tracking-tight">
-              {activeTab === 'dashboard' && 'Student Workspace'}
-              {activeTab === 'analytics' && 'Analytics Insights'}
-              {activeTab === 'settings' && 'System Settings'}
+              {activeTab === 'dashboard' ? 'Student Workspace' : 'Analytics Insights'}
             </h1>
             <div className="flex items-center gap-2 mt-1 text-slate-400 text-xs font-semibold">
               <Calendar size={13} />
@@ -543,101 +509,7 @@ export const Dashboard: React.FC = () => {
               </motion.div>
             )}
 
-            {/* TAB 3: SETTINGS VIEW */}
-            {activeTab === 'settings' && (
-              <motion.div
-                key="settings"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.2 }}
-                className="flex flex-col gap-8 w-full max-w-2xl"
-              >
-                {/* Database Settings Info card */}
-                <div className="bg-slate-900/30 border border-slate-900 p-6 sm:p-8 rounded-3xl flex flex-col gap-6">
-                  <div>
-                    <h3 className="text-sm font-bold text-white tracking-tight">PostgreSQL Database Connection</h3>
-                    <p className="text-xs text-slate-400 mt-1">Local database configuration reading from environment variables.</p>
-                  </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">DB User</label>
-                      <input 
-                        type="text" 
-                        value={dbUserVal}
-                        onChange={(e) => setDbUserVal(e.target.value)}
-                        className="bg-slate-950 border border-slate-900 rounded-xl px-4 py-2.5 text-xs text-slate-300 font-bold focus:border-slate-800 outline-none"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">DB Host</label>
-                      <input 
-                        type="text" 
-                        value={dbHostVal}
-                        onChange={(e) => setDbHostVal(e.target.value)}
-                        className="bg-slate-950 border border-slate-900 rounded-xl px-4 py-2.5 text-xs text-slate-300 font-bold focus:border-slate-800 outline-none"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">DB Port</label>
-                      <input 
-                        type="text" 
-                        value={dbPortVal}
-                        onChange={(e) => setDbPortVal(e.target.value)}
-                        className="bg-slate-950 border border-slate-900 rounded-xl px-4 py-2.5 text-xs text-slate-300 font-bold focus:border-slate-800 outline-none"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">DB Name</label>
-                      <input 
-                        type="text" 
-                        value="student_db" 
-                        disabled
-                        className="bg-slate-950/50 border border-slate-900/60 rounded-xl px-4 py-2.5 text-xs text-slate-500 font-bold outline-none cursor-not-allowed"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* API Health Connection Ping check */}
-                <div className="bg-slate-900/30 border border-slate-900 p-6 sm:p-8 rounded-3xl flex flex-col gap-6">
-                  <div>
-                    <h3 className="text-sm font-bold text-white tracking-tight">API Service Health</h3>
-                    <p className="text-xs text-slate-400 mt-1">Verify round-trip latency checks to the Express backend service.</p>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row items-center gap-4">
-                    <button
-                      onClick={runPingCheck}
-                      disabled={pinging}
-                      className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-lg border border-slate-800 hover:border-slate-700 transition-all flex items-center gap-2"
-                    >
-                      {pinging ? (
-                        <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                      ) : (
-                        <Network size={14} />
-                      )}
-                      Test Api Latency
-                    </button>
-
-                    <div className="flex items-center gap-3">
-                      {pingLatency !== null ? (
-                        <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-1.5 rounded-xl">
-                          <Cpu size={14} className="text-emerald-400" />
-                          <span className="text-xs font-bold text-emerald-400">{pingLatency} ms</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 bg-slate-900/50 px-3.5 py-1.5 rounded-xl border border-slate-900">
-                          <Clock size={14} className="text-slate-500" />
-                          <span className="text-xs font-bold text-slate-500">Not Tested</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
           </AnimatePresence>
         </div>
       </div>
