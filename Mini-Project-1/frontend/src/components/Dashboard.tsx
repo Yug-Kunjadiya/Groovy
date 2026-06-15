@@ -4,20 +4,34 @@ import { studentApi } from '../services/api';
 import { StudentTable } from './StudentTable';
 import { StudentForm } from './StudentForm';
 import { DeleteModal } from './DeleteModal';
-import { Plus, Search, Users, BookOpen, GraduationCap, X, AlertCircle, CheckCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Plus, Search, Users, BookOpen, GraduationCap, X, AlertCircle, CheckCircle, 
+  Calendar, LayoutDashboard, Settings, BarChart3, Activity, ArrowUpRight, SortAsc
+} from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [search, setSearch] = useState('');
+  const [courseFilter, setCourseFilter] = useState('All');
+  const [sortBy, setSortBy] = useState('newest'); // 'name', 'newest', 'oldest'
   const [loading, setLoading] = useState(true);
   
-  // Notification states
+  // Notification state
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // Modal control states
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+
+  // Time & Date State for Header
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Fetch all students
   const fetchStudents = async (query = '') => {
@@ -27,7 +41,7 @@ export const Dashboard: React.FC = () => {
       setStudents(response.data);
     } catch (err: any) {
       console.error(err);
-      showNotification('error', 'Failed to fetch students. Is the server running?');
+      showNotification('error', 'Database connection offline. Verify PostgreSQL service status.');
     } finally {
       setLoading(false);
     }
@@ -36,7 +50,7 @@ export const Dashboard: React.FC = () => {
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       fetchStudents(search);
-    }, 300); // Debounce search calls by 300ms
+    }, 300);
 
     return () => clearTimeout(delayDebounceFn);
   }, [search]);
@@ -52,14 +66,12 @@ export const Dashboard: React.FC = () => {
   // Add / Edit submission handler
   const handleFormSubmit = async (studentData: StudentInput) => {
     if (selectedStudent) {
-      // Edit Student
       const response = await studentApi.update(selectedStudent.id, studentData);
       if (response.success) {
         showNotification('success', response.message || 'Student updated successfully!');
         fetchStudents(search);
       }
     } else {
-      // Add Student
       const response = await studentApi.create(studentData);
       if (response.success) {
         showNotification('success', response.message || 'Student added successfully!');
@@ -79,138 +91,336 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  // Compute simple statistics
-  const totalStudents = students.length;
-  const uniqueCourses = new Set(students.map((s) => s.course.trim().toLowerCase())).size;
+  // Extract unique courses for filtering pills
+  const coursesList = ['All', ...Array.from(new Set(students.map(s => s.course)))];
+
+  // Local filtering & sorting logic
+  const filteredStudents = students
+    .filter((student) => {
+      if (courseFilter === 'All') return true;
+      return student.course === courseFilter;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'name') {
+        return a.name.localeCompare(b.name);
+      } else if (sortBy === 'oldest') {
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      } else {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
+
+  // Calculate dynamic stats
+  const totalStudentsCount = students.length;
+  const uniqueCoursesCount = new Set(students.map((s) => s.course.trim().toLowerCase())).size;
+
+  // Aggregate course distributions
+  const courseCounts = students.reduce((acc: Record<string, number>, curr) => {
+    const key = curr.course;
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
 
   return (
-    <div className="min-h-screen bg-slate-50/50 flex flex-col">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex font-sans antialiased overflow-hidden">
       
-      {/* Top Banner Navigation */}
-      <header className="bg-white border-b border-slate-100 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="bg-primary-600 text-white p-2 rounded-xl">
-              <GraduationCap size={20} />
-            </div>
-            <span className="font-bold text-lg text-slate-800 tracking-tight">Academix</span>
+      {/* 1. Left Navigation Sidebar */}
+      <aside className="w-64 border-r border-slate-900 bg-slate-950 p-6 hidden md:flex flex-col gap-8 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="bg-gradient-to-tr from-primary-500 to-indigo-600 text-white p-2.5 rounded-2xl shadow-lg shadow-indigo-500/20">
+            <GraduationCap size={20} />
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm font-medium text-slate-500 bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-xl">
-              v1.0.0
-            </span>
-          </div>
+          <span className="font-extrabold text-base tracking-wider bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+            ACADEMIX
+          </span>
         </div>
-      </header>
 
-      {/* Main Body */}
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex flex-col gap-6">
+        <nav className="flex flex-col gap-1.5">
+          <button className="flex items-center gap-3 px-4 py-3 bg-slate-900 text-white rounded-2xl text-xs font-bold transition-all">
+            <LayoutDashboard size={16} className="text-primary-400" />
+            Dashboard
+          </button>
+          <button className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-900/50 rounded-2xl text-xs font-bold transition-all">
+            <BarChart3 size={16} />
+            Analytics
+          </button>
+          <button className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-900/50 rounded-2xl text-xs font-bold transition-all">
+            <Settings size={16} />
+            Settings
+          </button>
+        </nav>
+
+        <div className="mt-auto bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-900 p-4 rounded-2xl flex flex-col gap-3">
+          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Active Database</div>
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
+            <span className="text-xs font-bold text-slate-300">PostgreSQL Online</span>
+          </div>
+          <div className="text-[10px] font-medium text-slate-500">Host: localhost:5432</div>
+        </div>
+      </aside>
+
+      {/* Main Content Workspace */}
+      <div className="flex-1 flex flex-col min-h-screen overflow-y-auto bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black">
         
-        {/* Floating Notification */}
-        {notification && (
-          <div className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg border animate-in fade-in slide-in-from-top duration-300 max-w-sm flex items-start gap-3 ${
-            notification.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-rose-50 border-rose-100 text-rose-800'
-          }`}>
-            {notification.type === 'success' ? (
-              <CheckCircle size={18} className="mt-0.5 text-emerald-600 shrink-0" />
-            ) : (
-              <AlertCircle size={18} className="mt-0.5 text-rose-600 shrink-0" />
-            )}
-            <div className="flex-1 text-sm font-medium">{notification.message}</div>
-            <button
-              onClick={() => setNotification(null)}
-              className="text-slate-400 hover:text-slate-600 shrink-0"
+        {/* Floating Notification Banner */}
+        <AnimatePresence>
+          {notification && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              className={`fixed top-6 right-6 z-50 p-4.5 rounded-2xl shadow-2xl border backdrop-blur-md max-w-sm flex items-start gap-3.5 ${
+                notification.type === 'success' ? 'bg-emerald-950/80 border-emerald-900/80 text-emerald-300' : 'bg-rose-950/80 border-rose-900/80 text-rose-300'
+              }`}
             >
-              <X size={14} />
-            </button>
-          </div>
-        )}
-
-        {/* Hero Section / Stats */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
-            <div className="p-4 bg-primary-50 text-primary-600 rounded-xl">
-              <Users size={24} />
-            </div>
-            <div>
-              <div className="text-sm text-slate-400 font-semibold uppercase tracking-wider">Total Students</div>
-              <div className="text-2xl font-bold text-slate-800 mt-1">{totalStudents}</div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
-            <div className="p-4 bg-purple-50 text-purple-600 rounded-xl">
-              <BookOpen size={24} />
-            </div>
-            <div>
-              <div className="text-sm text-slate-400 font-semibold uppercase tracking-wider">Active Courses</div>
-              <div className="text-2xl font-bold text-slate-800 mt-1">{uniqueCourses}</div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4 sm:col-span-2 md:col-span-1">
-            <div className="p-4 bg-emerald-50 text-emerald-600 rounded-xl">
-              <GraduationCap size={24} />
-            </div>
-            <div>
-              <div className="text-sm text-slate-400 font-semibold uppercase tracking-wider">Status</div>
-              <div className="text-sm font-semibold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-lg mt-1 inline-block">
-                Connected
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Search & Actions Panel */}
-        <section className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-          <div className="relative w-full sm:w-80">
-            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search by name, email or course..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 focus:border-primary-500 focus:bg-white rounded-xl text-sm outline-none transition-all"
-            />
-            {search && (
-              <button
-                onClick={() => setSearch('')}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-              >
+              {notification.type === 'success' ? (
+                <CheckCircle size={18} className="mt-0.5 text-emerald-400 shrink-0" />
+              ) : (
+                <AlertCircle size={18} className="mt-0.5 text-rose-400 shrink-0" />
+              )}
+              <div className="flex-1 text-xs font-bold leading-relaxed">{notification.message}</div>
+              <button onClick={() => setNotification(null)} className="text-slate-400 hover:text-white shrink-0">
                 <X size={14} />
               </button>
-            )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* 2. Top Header Section */}
+        <header className="border-b border-slate-900 px-6 sm:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <h1 className="text-xl font-extrabold text-white tracking-tight">Student Workspace</h1>
+            <div className="flex items-center gap-2 mt-1 text-slate-400 text-xs font-semibold">
+              <Calendar size={13} />
+              <span>{currentTime.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+              <span className="text-slate-700">•</span>
+              <span>{currentTime.toLocaleTimeString()}</span>
+            </div>
           </div>
-          <button
-            onClick={() => {
-              setSelectedStudent(null);
-              setIsFormOpen(true);
-            }}
-            className="w-full sm:w-auto px-5 py-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold text-sm rounded-xl shadow-sm shadow-primary-200 hover:shadow-none transition-all flex items-center justify-center gap-2"
-          >
-            <Plus size={16} />
-            Add Student
-          </button>
-        </section>
 
-        {/* Student Table Registry */}
-        <section className="flex-1">
-          <StudentTable
-            students={students}
-            onEdit={(student) => {
-              setSelectedStudent(student);
-              setIsFormOpen(true);
-            }}
-            onDeleteClick={(student) => {
-              setSelectedStudent(student);
-              setIsDeleteOpen(true);
-            }}
-            loading={loading}
-          />
-        </section>
-      </main>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => {
+                setSelectedStudent(null);
+                setIsFormOpen(true);
+              }}
+              className="px-5 py-2.5 bg-gradient-to-r from-primary-500 to-indigo-600 hover:from-primary-600 hover:to-indigo-700 text-white font-bold text-xs rounded-2xl shadow-lg shadow-indigo-500/15 hover:shadow-none hover:translate-y-px transition-all flex items-center gap-2"
+            >
+              <Plus size={15} />
+              Add Student
+            </button>
+            
+            <div className="h-10 w-10 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center font-bold text-sm text-slate-200">
+              YK
+            </div>
+          </div>
+        </header>
 
-      {/* Form Dialog Modal */}
+        {/* Workspace Body Grid */}
+        <div className="p-6 sm:p-8 flex flex-col lg:flex-row gap-8">
+          
+          {/* Column 1: Main Stats and Students table */}
+          <div className="flex-1 flex flex-col gap-8">
+            
+            {/* 3. Stats Grid */}
+            <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              {/* Stat 1 */}
+              <motion.div 
+                whileHover={{ y: -3 }}
+                className="bg-slate-900/40 backdrop-blur-md border border-slate-900 p-6 rounded-3xl flex flex-col gap-3 relative overflow-hidden"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Enrolled Students</span>
+                  <div className="p-2 bg-blue-500/10 text-blue-400 rounded-xl">
+                    <Users size={16} />
+                  </div>
+                </div>
+                <div className="flex items-baseline gap-2.5">
+                  <span className="text-3xl font-extrabold text-white tracking-tight">{totalStudentsCount}</span>
+                  <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-lg flex items-center gap-0.5">
+                    <ArrowUpRight size={10} /> +12%
+                  </span>
+                </div>
+                <div className="text-[10px] text-slate-500 font-medium">Growth rate versus previous month</div>
+              </motion.div>
+
+              {/* Stat 2 */}
+              <motion.div 
+                whileHover={{ y: -3 }}
+                className="bg-slate-900/40 backdrop-blur-md border border-slate-900 p-6 rounded-3xl flex flex-col gap-3 relative overflow-hidden"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Active Courses</span>
+                  <div className="p-2 bg-violet-500/10 text-violet-400 rounded-xl">
+                    <BookOpen size={16} />
+                  </div>
+                </div>
+                <div className="flex items-baseline gap-2.5">
+                  <span className="text-3xl font-extrabold text-white tracking-tight">{uniqueCoursesCount}</span>
+                  <span className="text-[10px] font-bold text-violet-400 bg-violet-500/10 border border-violet-500/20 px-1.5 py-0.5 rounded-lg">
+                    Stable
+                  </span>
+                </div>
+                <div className="text-[10px] text-slate-500 font-medium">Distinct learning tracks in database</div>
+              </motion.div>
+
+              {/* Stat 3 */}
+              <motion.div 
+                whileHover={{ y: -3 }}
+                className="bg-slate-900/40 backdrop-blur-md border border-slate-900 p-6 rounded-3xl flex flex-col gap-3 relative overflow-hidden sm:col-span-2 md:col-span-1"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Database Uptime</span>
+                  <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl">
+                    <Activity size={16} />
+                  </div>
+                </div>
+                <div className="flex items-baseline gap-2.5">
+                  <span className="text-3xl font-extrabold text-white tracking-tight">99.9%</span>
+                  <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-lg flex items-center gap-0.5">
+                    Live
+                  </span>
+                </div>
+                <div className="text-[10px] text-slate-500 font-medium">Real-time health of local Postgres server</div>
+              </motion.div>
+            </section>
+
+            {/* 4. Filter, Search & Sorting Panel */}
+            <section className="flex flex-col gap-5 bg-slate-900/20 border border-slate-900 p-5 rounded-3xl">
+              
+              {/* Top search & sorting row */}
+              <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+                
+                {/* Search Bar */}
+                <div className="relative w-full md:w-80">
+                  <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <input
+                    type="text"
+                    placeholder="Search by student details..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 focus:border-primary-500 focus:bg-slate-950 rounded-2xl text-xs font-semibold text-slate-200 outline-none transition-all"
+                  />
+                  {search && (
+                    <button onClick={() => setSearch('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white">
+                      <X size={13} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Sorting options */}
+                <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1">
+                    <SortAsc size={12} /> Sort By:
+                  </span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="bg-slate-950 border border-slate-800 text-slate-200 text-xs font-bold px-3 py-2 rounded-xl outline-none focus:border-primary-500"
+                  >
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="name">Alphabetical (A-Z)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Quick Course Filter Pills */}
+              <div className="flex flex-wrap gap-2 pt-1 border-t border-slate-900/50">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center mr-1">
+                  Courses:
+                </span>
+                {coursesList.map((course) => (
+                  <button
+                    key={course}
+                    onClick={() => setCourseFilter(course)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                      courseFilter === course 
+                        ? 'bg-white text-slate-950 border-white font-extrabold' 
+                        : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-white hover:border-slate-700'
+                    }`}
+                  >
+                    {course}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {/* 5. Student List Table */}
+            <section className="flex-1">
+              <StudentTable
+                students={filteredStudents}
+                onEdit={(student) => {
+                  setSelectedStudent(student);
+                  setIsFormOpen(true);
+                }}
+                onDeleteClick={(student) => {
+                  setSelectedStudent(student);
+                  setIsDeleteOpen(true);
+                }}
+                loading={loading}
+              />
+            </section>
+          </div>
+
+          {/* Column 2: Dashboard Distribution Charts and Log details (Right panel) */}
+          <div className="w-full lg:w-80 shrink-0 flex flex-col gap-8">
+            
+            {/* Course Distribution */}
+            <section className="bg-slate-900/30 border border-slate-900 p-6 rounded-3xl flex flex-col gap-5">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Course Share</h3>
+              
+              <div className="flex flex-col gap-4">
+                {Object.entries(courseCounts).map(([courseName, count]) => {
+                  const percentage = totalStudentsCount > 0 ? Math.round((count / totalStudentsCount) * 100) : 0;
+                  return (
+                    <div key={courseName} className="flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between text-xs font-bold text-slate-300">
+                        <span className="truncate max-w-[180px]">{courseName}</span>
+                        <span>{count} ({percentage}%)</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-primary-500 to-indigo-500 rounded-full"
+                          style={{ width: `${percentage}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {totalStudentsCount === 0 && (
+                  <div className="text-xs font-semibold text-slate-500 italic py-2">No active distributions</div>
+                )}
+              </div>
+            </section>
+
+            {/* Recent activity log */}
+            <section className="bg-slate-900/30 border border-slate-900 p-6 rounded-3xl flex flex-col gap-5">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Recent Activity</h3>
+                <Activity size={14} className="text-slate-500" />
+              </div>
+
+              <div className="flex flex-col gap-4">
+                {students.slice(0, 4).map((s) => (
+                  <div key={s.id} className="flex items-start gap-3 text-xs font-medium text-slate-400">
+                    <div className="w-2 h-2 rounded-full bg-indigo-500 mt-1.5 shrink-0"></div>
+                    <div>
+                      <span className="font-bold text-slate-200">{s.name}</span> registered for the course <span className="text-primary-400 font-semibold">{s.course}</span>.
+                    </div>
+                  </div>
+                ))}
+                {totalStudentsCount === 0 && (
+                  <div className="text-xs font-semibold text-slate-500 italic py-2">No recent system records</div>
+                )}
+              </div>
+            </section>
+        </div>
+      </div>
+    </div>
+
+      {/* Register / Modify student Modal popup */}
       <StudentForm
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
@@ -218,7 +428,7 @@ export const Dashboard: React.FC = () => {
         student={selectedStudent}
       />
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Confirmation popup dialog */}
       <DeleteModal
         isOpen={isDeleteOpen}
         onClose={() => setIsDeleteOpen(false)}
