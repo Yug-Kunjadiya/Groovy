@@ -1,5 +1,5 @@
 import React from 'react';
-import { Student } from '../types/student';
+import type { Student } from '../types/student';
 import { Edit2, Trash2, Mail, Phone, BookOpen, Calendar } from 'lucide-react';
 
 interface StudentTableProps {

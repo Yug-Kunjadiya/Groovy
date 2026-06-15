@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Student, StudentInput } from '../types/student';
+import type { Student, StudentInput } from '../types/student';
 import { studentApi } from '../services/api';
 import { StudentTable } from './StudentTable';
 import { StudentForm } from './StudentForm';

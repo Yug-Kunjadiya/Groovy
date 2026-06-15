@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Student, StudentInput, ApiResponse } from '../types/student';
+import type { Student, StudentInput, ApiResponse } from '../types/student';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 

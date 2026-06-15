@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Student, StudentInput } from '../types/student';
+import type { Student, StudentInput } from '../types/student';
 import { X, User, Mail, Phone, BookOpen, AlertCircle } from 'lucide-react';
 
 interface StudentFormProps {
