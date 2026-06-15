@@ -1,145 +1,170 @@
-# Student Management CRUD Application (Mini-Project-1)
+# 🎓 Academix — Student Management SaaS Dashboard
 
-A premium, modern Student Management System built using React, TypeScript, Tailwind CSS, Axios on the frontend, and Node.js, Express.js, PostgreSQL on the backend. This application features full CRUD operations, search filters, state-of-the-art styling, input validation, and proper error handling.
-
-## Table of Contents
-1. [Features](#features)
-2. [Folder Structure](#folder-structure)
-3. [Technologies Used](#technologies-used)
-4. [Database Setup](#database-setup)
-5. [Backend Installation & Run](#backend-installation--run)
-6. [Frontend Installation & Run](#frontend-installation--run)
-7. [API Endpoints](#api-endpoints)
+Academix is a premium, state-of-the-art Student Management CRM system designed with modern SaaS aesthetics and built on a robust full-stack architecture. Drawing inspiration from top-tier platforms like Linear, Stripe, and Vercel, it features a glassmorphism dark-mode UI, smooth micro-interactions, dynamic dashboard metrics, custom visualizations, and comprehensive database logs.
 
 ---
 
-## Features
-- **Add Student**: Multi-field registration form with robust validation (Name, Email, Phone, Course).
-- **View Students**: Clean, elegant list layout featuring custom badges and avatar icons.
-- **Search**: Debounced real-time filtering by name, email, phone, or course.
-- **Update Student**: Populated form with check against email duplicate conflicts.
-- **Delete Student**: Soft-red modal warning to confirm permanent record removal.
-- **Form Validation**: Strict regex rules for telephone numbers and email syntax.
-- **Success & Error States**: Micro-animated notification alerts with auto-dismissals.
+## 📸 Interface Preview
+
+### 🖥️ Student Workspace (Dashboard)
+The primary cockpit for managing student records. It features dynamic counters for enrolled students, active courses, and server uptime. It also lists students in a premium glassmorphic grid with custom badges, dynamic filter chips, search query capabilities, and a live Recent Activity feed.
+
+![Student Workspace Dashboard](../screenshots/dashboard.png)
+
+### 📊 Analytics Insights
+Provides key metrics at a glance, highlighting average course sizes, course growth trends, top learning pathways, and active student enrollment densities through interactive gradient bar representations.
+
+![Analytics Insights](../screenshots/analytics.png)
 
 ---
 
-## Folder Structure
+## ✨ Features
+
+- **Premium SaaS Aesthetic**: A sleek, dark-themed dashboard styled with HSL tailored color palettes, glassmorphism card layouts, subtle gradients, and smooth hover state animations (powered by Tailwind CSS and Framer Motion).
+- **Comprehensive CRUD Operations**:
+  - **Add Student**: Multi-field registration modal with validation (name, email, phone, course).
+  - **View Students**: Paginated tabular layout with inline action triggers and personalized avatar badges.
+  - **Update Student**: Pre-populated update forms with conflict validation (e.g., duplicate email checks).
+  - **Delete Student**: Dialog box to prevent accidental record removals.
+- **Real-Time Data Filtering**: Instant search and course-specific filter chips.
+- **Dynamic Metrics**:
+  - Growth trend indicators (`+12%`, `-5%`, etc.)
+  - Real-time PostgreSQL database health/uptime indicator.
+  - Interactive course share breakdown and recent registration activity feed.
+- **Analytics View**: High-fidelity dashboard for tracking average course sizes, growth indices, top tracks, and active enrollment density charts.
+- **Robust Backend**:
+  - Built with Express and Node.js using clean Model-View-Controller architecture.
+  - Secure parameterized queries via PostgreSQL (`pg` pool integration) to prevent SQL injection.
+  - Custom error handling and input validation middleware.
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+- **Framework**: React 19 (Vite, TypeScript)
+- **Styling**: Tailwind CSS
+- **Animations**: Framer Motion
+- **Icons**: Lucide React
+- **API Client**: Axios
+
+### Backend
+- **Runtime**: Node.js
+- **Framework**: Express.js
+- **Database**: PostgreSQL
+- **Orchestration**: Concurrently (runs frontend & backend together)
+
+---
+
+## 📁 Project Structure
+
 ```
 Mini-Project-1/
 ├── backend/
 │   ├── src/
 │   │   ├── config/
-│   │   │   └── db.js               # pg Pool instance
+│   │   │   └── db.js               # pg Pool setup
 │   │   ├── controllers/
-│   │   │   └── studentController.js # API Controller & Validations
+│   │   │   └── studentController.js # API Controllers & validator rules
 │   │   ├── middleware/
-│   │   │   └── errorMiddleware.js   # Not Found & DB Error mapper
+│   │   │   └── errorMiddleware.js   # DB Error mapper
 │   │   ├── models/
-│   │   │   └── studentModel.js      # Parameterized queries
+│   │   │   └── studentModel.js      # SQL queries & DB interaction
 │   │   └── routes/
-│   │       └── studentRoutes.js     # Express routes mapping
+│   │       └── studentRoutes.js     # Route controllers mapping
 │   ├── .env.example
 │   ├── .env
 │   ├── package.json
-│   ├── schema.sql                   # Database table & sample data
-│   └── server.js                    # Express Application Entry
+│   ├── schema.sql                   # Database setup script
+│   └── server.js                    # Backend server entrypoint
 │
 ├── frontend/
-│   ├── public/
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── Dashboard.tsx        # Container & metrics dashboard
-│   │   │   ├── DeleteModal.tsx      # Confirmation dialog
-│   │   │   ├── StudentForm.tsx      # Multi-mode input validator
-│   │   │   └── StudentTable.tsx     # Student records list table
+│   │   │   ├── Dashboard.tsx        # Dashboard layout, state & tabs
+│   │   │   ├── DeleteModal.tsx      # Record deletion confirmation modal
+│   │   │   ├── StudentForm.tsx      # Add/Edit validator form modal
+│   │   │   └── StudentTable.tsx     # Custom records table
 │   │   ├── services/
-│   │   │   └── api.ts               # Axios instance & methods
+│   │   │   └── api.ts               # Axios services
 │   │   ├── types/
-│   │   │   └── student.ts           # Types & interfaces
-│   │   ├── App.tsx
-│   │   ├── index.css                # Base & tailwind layers
+│   │   │   └── student.ts           # TS Types
+│   │   ├── App.tsx                  # Root wrapper
+│   │   ├── index.css                # Base & tailwind configuration
 │   │   └── main.tsx
-│   ├── eslint.config.js
-│   ├── index.html
 │   ├── package.json
 │   ├── postcss.config.js
 │   ├── tailwind.config.js
-│   ├── tsconfig.json
 │   └── vite.config.ts
 │
-└── docs/
-    ├── README.md
-    ├── architecture.md
-    ├── api-documentation.md
-    └── prompts-used.md
+├── docs/
+│   ├── README.md                    # Project documentation
+│   ├── architecture.md              # Technical design specifications
+│   ├── api-documentation.md         # Express REST API endpoints list
+│   └── prompts-used.md              # Redesign prompts history
+│
+└── screenshots/                     # Preview images
+    ├── dashboard.png
+    └── analytics.png
 ```
 
 ---
 
-## Technologies Used
-- **Frontend**: React 19, Vite, TypeScript, Tailwind CSS, Axios, Lucide React
-- **Backend**: Node.js, Express, `pg` (node-postgres), Dotenv, Morgan, Cors
-- **Database**: PostgreSQL (v18)
+## 🚀 Getting Started
 
----
+### Prerequisites
+- **Node.js** (v18 or higher)
+- **PostgreSQL** (running locally or in the cloud)
 
-## Database Setup
-1. Open your PostgreSQL terminal/pgAdmin.
-2. Create a new database named `student_db`:
+### 1. Database Setup
+1. Log in to your PostgreSQL instance (e.g., via `psql` or pgAdmin).
+2. Create the target database:
    ```sql
    CREATE DATABASE student_db;
    ```
-3. Run the schema migrations from `backend/schema.sql`:
+3. Run the schema migrations from `backend/schema.sql` to construct the student table and seed sample records:
    ```bash
-   # If psql is in PATH:
    psql -U postgres -d student_db -f backend/schema.sql
    ```
-   *Note: If `psql` isn't in your path, copy the contents of `backend/schema.sql` and run them inside your SQL query tool.*
 
----
+### 2. Environment Configuration
+Navigate to the `backend/` directory, copy the `.env.example` file to `.env`, and update it with your database credentials:
+```env
+PORT=5000
+DB_USER=postgres
+DB_PASSWORD=your_password
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=student_db
+```
 
-## Backend Installation & Run
-1. Navigate to the backend directory:
+### 3. Installation & Start
+
+Academix includes a root-level task manager that allows you to install and launch both applications with single commands:
+
+1. **Install all dependencies** (Frontend & Backend):
    ```bash
-   cd backend
+   npm run install:all
    ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Copy `.env.example` to `.env` and configure your credentials:
-   ```bash
-   cp .env.example .env
-   # Update DB_USER, DB_PASSWORD, and DB_PORT as needed.
-   ```
-4. Start the development server (runs on port 5000):
+2. **Start the development servers**:
    ```bash
    npm run dev
    ```
 
----
-
-## Frontend Installation & Run
-1. Navigate to the frontend directory:
-   ```bash
-   cd ../frontend
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Start the Vite development server (runs on port 5173):
-   ```bash
-   npm run dev
-   ```
-4. Open your browser to `http://localhost:5173`.
+The application will now be running on:
+- **Frontend client**: [http://localhost:5173](http://localhost:5173)
+- **Backend server API**: [http://localhost:5000](http://localhost:5000)
 
 ---
 
-## API Endpoints
-- `GET /api/students` - Retrieves all student records (supports `?search=` query).
-- `GET /api/students/:id` - Retrieves details of a single student.
-- `POST /api/students` - Adds a new student (validates fields).
-- `PUT /api/students/:id` - Modifies an existing student.
-- `DELETE /api/students/:id` - Permanently deletes a student.
+## 🔌 API Endpoints Summary
+
+For complete details, see [api-documentation.md](file:///d:/ai-%20first%20engineer/Mini-Project-1/docs/api-documentation.md).
+
+| Method | Endpoint | Description | Query Parameters |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/students` | Retrieve all student records | `search` (optional search query) |
+| `GET` | `/api/students/:id` | Get details for a single student | None |
+| `POST` | `/api/students` | Register a new student | None (expects JSON body) |
+| `PUT` | `/api/students/:id` | Update student credentials | None (expects JSON body) |
+| `DELETE`| `/api/students/:id` | Remove a student's enrollment record | None |
