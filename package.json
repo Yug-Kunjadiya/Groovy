@@ -1,0 +1,9 @@
+{
+  "name": "ai-first-engineer-workspace",
+  "version": "1.0.0",
+  "description": "Workspace root orchestrator",
+  "scripts": {
+    "install:all": "npm install --prefix Mini-Project-1 && npm run install:all --prefix Mini-Project-1",
+    "dev": "npm run dev --prefix Mini-Project-1"
+  }
+}
