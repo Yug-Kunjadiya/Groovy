@@ -17,9 +17,9 @@ export default function UploadZone({ onUploadSuccess, onError, isLoading, setIsL
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
-    
+
     if (isLoading) return;
-    
+
     const files = e.dataTransfer.files;
     if (files && files.length > 0) {
       processFile(files[0]);
@@ -28,7 +28,7 @@ export default function UploadZone({ onUploadSuccess, onError, isLoading, setIsL
 
   const handleFileChange = (e) => {
     if (isLoading) return;
-    
+
     const files = e.target.files;
     if (files && files.length > 0) {
       processFile(files[0]);
@@ -53,7 +53,7 @@ export default function UploadZone({ onUploadSuccess, onError, isLoading, setIsL
     formData.append('pdf', file);
 
     try {
-      const response = await fetch('/api/upload', {
+      const response = await fetch('https://smart-doc-qa-backend-6uco.onrender.com/api/upload', {
         method: 'POST',
         body: formData,
       });
@@ -77,21 +77,21 @@ export default function UploadZone({ onUploadSuccess, onError, isLoading, setIsL
   };
 
   return (
-    <div 
+    <div
       className={`upload-zone ${isDragging ? 'dragging' : ''}`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       onClick={handleClick}
     >
-      <input 
-        type="file" 
-        ref={fileInputRef} 
-        onChange={handleFileChange} 
-        accept="application/pdf" 
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept="application/pdf"
         style={{ display: 'none' }}
       />
-      
+
       {isLoading ? (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
           <div className="pulse-spinner"></div>

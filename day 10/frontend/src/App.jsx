@@ -3,6 +3,7 @@ import { Sparkles, FileText, AlertCircle, Trash2, ShieldAlert } from 'lucide-rea
 import UploadZone from './components/UploadZone';
 import HistorySidebar from './components/HistorySidebar';
 import ChatInterface from './components/ChatInterface';
+const API_URL = "https://smart-doc-qa-backend-6uco.onrender.com";
 
 export default function App() {
   const [pdfInfo, setPdfInfo] = useState(null);
@@ -16,7 +17,7 @@ export default function App() {
   useEffect(() => {
     async function checkStatus() {
       try {
-        const response = await fetch('/api/status');
+        const response = await fetch(`${API_URL}/api/status`);
         const data = await response.json();
         if (data.success && data.hasPdf) {
           setPdfInfo({
@@ -49,7 +50,7 @@ export default function App() {
     setChatHistory(tempChatHistory);
 
     try {
-      const response = await fetch('/api/ask', {
+      const response = await fetch(`${API_URL}/api/ask`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -77,7 +78,7 @@ export default function App() {
     } catch (err) {
       console.error(err);
       setError(err.message || 'An error occurred while communicating with the AI model.');
-      
+
       // Remove the empty message placeholder if it failed
       setChatHistory(prev => prev.slice(0, -1));
     } finally {
@@ -89,7 +90,7 @@ export default function App() {
     setIsResetting(true);
     setError(null);
     try {
-      const response = await fetch('/api/reset', {
+      const response = await fetch(`${API_URL}/api/reset`, {
         method: 'POST',
       });
       if (response.ok) {
@@ -108,10 +109,10 @@ export default function App() {
   return (
     <div className="app-container">
       {/* Navigation History Sidebar */}
-      <HistorySidebar 
-        pdfInfo={pdfInfo} 
-        chatHistory={chatHistory} 
-        onReset={handleReset} 
+      <HistorySidebar
+        pdfInfo={pdfInfo}
+        chatHistory={chatHistory}
+        onReset={handleReset}
         isResetting={isResetting}
       />
 
@@ -125,12 +126,12 @@ export default function App() {
           </div>
           {pdfInfo && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <div 
-                style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '0.4rem', 
-                  background: 'rgba(255,255,255,0.03)', 
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  background: 'rgba(255,255,255,0.03)',
                   border: '1px solid var(--border-color)',
                   padding: '0.35rem 0.75rem',
                   borderRadius: '20px',
@@ -138,11 +139,11 @@ export default function App() {
                 }}
               >
                 <FileText size={12} style={{ color: 'var(--color-primary)' }} />
-                <span 
-                  style={{ 
-                    maxWidth: '180px', 
-                    whiteSpace: 'nowrap', 
-                    overflow: 'hidden', 
+                <span
+                  style={{
+                    maxWidth: '180px',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     color: 'var(--text-main)',
                     fontWeight: '500'
@@ -162,14 +163,14 @@ export default function App() {
           <div className="welcome-container">
             <div className="welcome-inner">
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
-                <div 
-                  style={{ 
-                    background: 'var(--primary-gradient)', 
-                    width: '64px', 
-                    height: '64px', 
-                    borderRadius: '20px', 
-                    display: 'flex', 
-                    alignItems: 'center', 
+                <div
+                  style={{
+                    background: 'var(--primary-gradient)',
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
                     justifyContent: 'center',
                     boxShadow: '0 8px 24px -6px rgba(99, 102, 241, 0.4)',
                     marginBottom: '1rem'
@@ -190,9 +191,9 @@ export default function App() {
                 </div>
               )}
 
-              <UploadZone 
-                onUploadSuccess={handleUploadSuccess} 
-                onError={setError} 
+              <UploadZone
+                onUploadSuccess={handleUploadSuccess}
+                onError={setError}
                 isLoading={isUploading}
                 setIsLoading={setIsUploading}
               />
@@ -207,11 +208,11 @@ export default function App() {
                 <span>{error}</span>
               </div>
             )}
-            
-            <ChatInterface 
-              chatHistory={chatHistory} 
-              isLoading={isLoadingAnswer} 
-              onAsk={handleAsk} 
+
+            <ChatInterface
+              chatHistory={chatHistory}
+              isLoading={isLoadingAnswer}
+              onAsk={handleAsk}
             />
           </div>
         )}
