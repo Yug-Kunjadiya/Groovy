@@ -1,0 +1,11 @@
+Welcome to the Smart Doc Q&A Handbook!
+
+1. Purpose
+This application helps users extract information from documents using AI.
+
+2. Document Types
+We currently support PDF files and plain text files.
+
+3. System Limitations
+- Maximum PDF size: 10MB
+- All processing is done in-memory for security and speed.
