@@ -82,3 +82,20 @@ python day-15/main.py day-15/samples/test.py
 * **Review History Catalog:** Search, sort, and filter records of all past code reviews.
 * **Aggregated Insights:** Interactive charts showing score trends and issues breakdown.
 
+---
+
+## Web Dashboard Preview
+
+### 1. Dashboard Overview
+![Dashboard Overview](assets/dashboard_overview.png)
+
+### 2. Code Review Workspace
+![Code Review Workspace](assets/code_review_workspace.png)
+
+### 3. Review History
+![Review History](assets/review_history.png)
+
+### 4. Analytics Dashboard
+![Analytics Dashboard](assets/analytics_dashboard.png)
+
+
