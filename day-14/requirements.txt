@@ -1,0 +1,9 @@
+langchain
+langchain-core
+langchain-community
+langchain-openai
+llama-index
+llama-index-llms-openai
+llama-index-agent-openai
+openai
+groq
